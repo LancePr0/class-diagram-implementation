@@ -1,58 +1,71 @@
 #include <iostream>
 #include <string>
+#include <limits>
 
 using namespace std;
 
 class Product {
-public:
+private:    
     string id;
     string name;
     int price;
 
+public:
     Product(string id, string name, int price) {
         this->id = id;
         this->name = name;
         this->price = price;
     }
+
+    string getId() { return id; }
+    string getName() { return name; }
+    int getPrice() { return price; }
 };
 
 class ShoppingCart {
-public:
+private:    
     Product* cart[10];
     int quantities[10];
     int count;
-
-    ShoppingCart() {
-        count = 0;
-    }
+    
+public:
+    ShoppingCart() { count = 0; }
 
     void addProduct(Product* product, int quantity) {
-        cart[count] = product;
-        quantities[count] = quantity;
-        count++;
-        cout << "Product added successfully!\n";
+        if (count < 10) {
+            cart[count] = product;
+            quantities[count] = quantity;
+            count++;
+            cout << "Product added successfully!\n";
+        } else {
+            cout << "Cart is full!\n";
+        }
     }
 
     void viewCart() {
         cout << "Product ID   Name          Price   Quantity\n";
         for (int i = 0; i < count; i++) {
-            cout << cart[i]->id << "          " << cart[i]->name;
-            for (int j = cart[i]->name.length(); j < 15; j++) cout << " ";
-            cout << cart[i]->price << "      " << quantities[i] << endl;
+            cout << cart[i]->getId() << "          " << cart[i]->getName();
+            for (int j = cart[i]->getName().length(); j < 15; j++) cout << " ";
+            cout << cart[i]->getPrice() << "      " << quantities[i] << endl;
         }
     }
+
+    int getCount() { return count; }
+    Product* getProduct(int index) { return cart[index]; }
+    int getQuantity(int index) { return quantities[index]; }
 };
 
 class Order {
-public:
+private:
     ShoppingCart cart;
-    int totalAmount;
-
-    Order(ShoppingCart c) {
-        cart = c;
+    int totalAmount;    
+    
+public:
+    Order(ShoppingCart c) : cart(c) {
         totalAmount = 0;
-        for (int i = 0; i < cart.count; i++) {
-            totalAmount += cart.cart[i]->price * cart.quantities[i];
+        for (int i = 0; i < cart.getCount(); i++) {
+            totalAmount += cart.getProduct(i)->getPrice() * cart.getQuantity(i);
         }
     }
 
@@ -79,13 +92,20 @@ int main() {
         cout << "\nMenu:\n1. View Products\n2. View Shopping Cart\n3. View Orders\n4. Exit\nEnter choice: ";
         int choice;
         cin >> choice;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input! Please enter a number.\n";
+            continue;
+        }
         
         if (choice == 1) {
             cout << "Product ID    Name            Price\n";
             for (int i = 0; i < 5; i++) {
-                cout << products[i].id << "          " << products[i].name;
-                for (int j = products[i].name.length(); j < 15; j++) cout << " ";
-                cout << products[i].price << endl;
+                cout << products[i].getId() << "          " << products[i].getName();
+                for (int j = products[i].getName().length(); j < 15; j++) cout << " ";
+                cout << products[i].getPrice() << endl;
             }
             
             while (true) {
@@ -96,10 +116,19 @@ int main() {
                 
                 bool found = false;
                 for (int i = 0; i < 5; i++) {
-                    if (products[i].id == pid) {
-                        cout << "Enter quantity: ";
+                    if (products[i].getId() == pid) {
                         int qty;
-                        cin >> qty;
+                        while (true) {
+                            cout << "Enter quantity: ";
+                            cin >> qty;
+                            if (cin.fail() || qty <= 0) {
+                                cin.clear();
+                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                cout << "Invalid quantity! Please enter a valid number.\n";
+                            } else {
+                                break;
+                            }
+                        }
                         cart.addProduct(&products[i], qty);
                         found = true;
                         break;
@@ -110,7 +139,7 @@ int main() {
         }
         
         else if (choice == 2) {
-            if (cart.count == 0) {
+            if (cart.getCount() == 0) {
                 cout << "Shopping cart is empty!\n";
             } else {
                 cart.viewCart();
